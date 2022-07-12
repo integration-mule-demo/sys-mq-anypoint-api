@@ -4,7 +4,5 @@ tls:
   key: "![3lEumFBKcKU=]"
   pwd: "![3lEumFBKcKU=]"
 
-salesforce:
-  user:  "![drKpu7GgG+uZSfWEKGDYT+iHf0NLQuDpFrk6UR1Lbsw=]"
-  pwd:  "$3cur3Password"
-  token:  "![g7P6CqL9Bry5YBUF7biicrQ11maKoN73qeEl3PdaaL8=]"
+proc-prospects-api:
+  url: "![dGs6InWY8gSIADD9LnTTBNz8BgpRYv8wkWAZUxxVrK29KY4Bwj9bukfoHyfKkAaO]"

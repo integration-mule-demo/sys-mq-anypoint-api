@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:anypoint-mq="http://www.mulesoft.org/schema/mule/anypoint-mq" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/anypoint-mq http://www.mulesoft.org/schema/mule/anypoint-mq/current/mule-anypoint-mq.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+	
+	<sub-flow name="post-on-salesforce-subflow" doc:id="234c5eb5-bed0-4609-aa5f-0b451b004ee4" >
+		<json-logger:logger doc:name="Start" doc:id="c63c1440-ebb1-47b9-8792-6ee94bc5916f" config-ref="JSON_Logger_Config" message="Post on salesforce queue"/>
+		<anypoint-mq:publish doc:name="Publish to MQ" doc:id="08648df5-0b1b-4ef3-8742-8fee6cac27f6" config-ref="Anypoint_MQ_Config" destination="Test.Prospect.On.Salesforce"/>
+		<ee:transform doc:name="Format Output" doc:id="f773df80-d776-47c1-a1b1-543839cd8560" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  message: "Message Successfully Queued"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger doc:name="End" doc:id="8285eb3a-c15d-4d6d-b368-c51ad6ad98b5" config-ref="JSON_Logger_Config" message="Finishing flow" tracePoint="END" >
+			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: ''
+}]]]></json-logger:content>
+		</json-logger:logger>
+	</sub-flow>
+	<sub-flow name="post-on-legacy-subflow" doc:id="4afb8521-6e3a-4f77-b7ab-5796c91cbd7b" >
+		<json-logger:logger doc:name="Start" doc:id="def8c153-a8f9-40ef-b7e7-a6a173d6f1d2" config-ref="JSON_Logger_Config" message="Post on legacy queue"/>
+		<anypoint-mq:publish doc:name="Publish to MQ" doc:id="d3c7f3ff-2e8d-476f-87f9-8d41861b0311" config-ref="Anypoint_MQ_Config" destination="Test.Prospect.On.Legacy" />
+		<ee:transform doc:name="Format Output" doc:id="b2331f7a-386e-4716-9a51-5fcb7fe3a7c3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  message: "Message Successfully Queued"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger doc:name="End" doc:id="ddbdb5e5-4e61-4d59-a135-3c3f7ced0201" config-ref="JSON_Logger_Config" message="Finishing flow" tracePoint="END" >
+			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: ''
+}]]]></json-logger:content>
+		</json-logger:logger>
+	</sub-flow>
+	<flow name="prospect-listener-salesforce" doc:id="ae50a552-f747-4710-bc26-bf0e5cb49adc" >
+		<anypoint-mq:subscriber doc:name="Subscriber on Salesforce" doc:id="08b9d9e3-55d3-4375-89e6-d6c2be88832b" config-ref="Anypoint_MQ_Config" destination="Test.Prospect.On.Salesforce"/>
+		<json-logger:logger doc:name="Start" doc:id="c055e2af-3ee1-4921-a356-3df2c674fff4" config-ref="JSON_Logger_Config" message="Start on listening salesforce queue"/>
+		<http:request method="POST" doc:name="Create prospect in SF" doc:id="2ae27d47-79ca-47c2-8406-eab4a02209fa" config-ref="Request-proc-prospects-api" path="/prospects" >
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"calledFromLegacy" : "true"
+}]]]></http:query-params>
+		</http:request>
+		<json-logger:logger doc:name="End" doc:id="7f54e4e7-d247-4bcd-b328-49637ef76c6c" config-ref="JSON_Logger_Config" message="Finishing flow" tracePoint="END">
+			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: ''
+}]]]></json-logger:content>
+		</json-logger:logger>
+	</flow>
+	<flow name="prospect-listener-legacy" doc:id="7bc95d25-0a54-434f-9655-a43b5243dafc" >
+		<anypoint-mq:subscriber doc:name="Subscriber on Legacy" doc:id="2591498a-ef73-4169-9536-17f5e36f27ee" config-ref="Anypoint_MQ_Config" destination="Test.Prospect.On.Legacy"/>
+		<json-logger:logger doc:name="Start" doc:id="caf64690-0143-4feb-97f7-3f1342816448" config-ref="JSON_Logger_Config" message="Start on listening legacy queue"/>
+		<http:request method="POST" doc:name="Create prospect in legacy" doc:id="b103a9d5-d79e-4ab9-9936-5c38a8201423" config-ref="Request-proc-prospects-api" path="/legacy/prospects"/>
+		<json-logger:logger doc:name="End" doc:id="7df46027-605d-44e3-a765-3625f41bab6f" config-ref="JSON_Logger_Config" message="Finishing flow" tracePoint="END" >
+			<json-logger:content ><![CDATA[#[import modules::JSONLoggerModule output application/json ---
+{
+    payload: ''
+}]]]></json-logger:content>
+		</json-logger:logger>
+	</flow>
+</mule>

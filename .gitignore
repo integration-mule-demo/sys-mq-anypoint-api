@@ -23,8 +23,6 @@ tmp/**/*
 local.properties
 .settings/
 .loadpath
-.project
-.classpath
 
 # External tool builders
 .externalToolBuilders/
@@ -46,3 +44,5 @@ target/
 .mule/**/*
 .DS_Store
 velocity.log
+.tooling/*
+src/main/resources/weave/*
